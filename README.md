@@ -123,6 +123,11 @@ curl.exe -X POST http://localhost:8080/assets/batch \
     {"name": "DB-Server-01", "type": "service"}
   ]
 }'
+
+
+curl.exe -X POST http://localhost:8080/assets/batch -H "Content-Type: application/json; charset=utf-8" -d "{\`"assets\`": [{\`"name\`": \`"Firewall-Core\`", \`"type\`": \`"ip\`"}, {\`"name\`": \`"cmc.com.vn\`", \`"type\`": \`"domain\`"}, {\`"name\`": \`"DB-Server-01\`", \`"type\`": \`"service\`"}]}" 
+
+
 <img width="1578" height="96" alt="image" src="https://github.com/user-attachments/assets/c5e77937-ee30-4bb3-a455-bc212485a99a" />
 
 ## [Bài 3] Xóa hàng loạt (Batch Delete)##
@@ -173,6 +178,7 @@ Ví dụ: Tìm các tài sản có chứa chữ "firewall"
 curl.exe -X GET "http://localhost:8080/assets/search?q=firewall"
 
 <img width="1607" height="106" alt="image" src="https://github.com/user-attachments/assets/038183b5-74ec-494d-9214-3a329ba97322" />
+
 
 
 

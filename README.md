@@ -95,48 +95,84 @@ Server sẽ lắng nghe các request tại địa chỉ: http://localhost:8080
 
 *(Lưu ý: Đảm bảo Server đang chạy ở `http://localhost:8080` trước khi chạy lệnh. Nếu bạn dùng Windows PowerShell, hãy gõ `curl.exe` thay cho `curl` hoặc sử dụng Git Bash).*
 
-**[Bài 1] Thống kê & Đếm tài sản (Statistics & Count)**
-```bash
-# 1. Lấy báo cáo tổng quan (Đếm tổng, nhóm theo Type và Status)
-curl -X GET http://localhost:8080/assets/stats
+## [Bài 1] Thống kê & Đếm tài sản (Statistics & Count)##
 
-# 2. Đếm tài sản kết hợp bộ lọc động (Ví dụ: Đếm số IP đang active)
-curl -X GET "http://localhost:8080/assets/count?type=ip&status=active"
-```
-**[Bài 2] Thêm hàng loạt tài sản (Batch Create)**
-```bash
-# Test thêm mới thành công (Áp dụng Transaction, tối đa 100 tài sản)
-curl -X POST http://localhost:8080/assets/batch \
+1. Lấy báo cáo tổng quan (Đếm tổng, nhóm theo Type và Status)
+
+curl.exe -X GET http://localhost:8080/assets/stats
+<img width="697" height="67" alt="image" src="https://github.com/user-attachments/assets/50f12b73-ebc5-4092-9122-a6e68b4cf119" />
+
+2. Đếm tài sản kết hợp bộ lọc động (Ví dụ: Đếm số IP đang active)
+
+
+
+curl.exe -X GET "http://localhost:8080/assets/count?type=ip&status=active"
+<img width="894" height="71" alt="image" src="https://github.com/user-attachments/assets/0bbee3b1-f2a5-4b55-b928-2b613bd3ae07" />
+
+
+## [Bài 2] Thêm hàng loạt tài sản (Batch Create)##
+
+Sử dụng Transaction để đảm bảo tính toàn vẹn dữ liệu (Tối đa 100 tài sản/lần).
+
+curl.exe -X POST http://localhost:8080/assets/batch \
 -H "Content-Type: application/json" \
 -d '{
   "assets": [
     {"name": "Firewall-Core", "type": "ip"},
-    {"name": "cmc.com.vn", "type": "domain"}
+    {"name": "cmc.com.vn", "type": "domain"},
+    {"name": "DB-Server-01", "type": "service"}
   ]
 }'
-```
-**[Bài 3] Xóa hàng loạt (Batch Delete)**
-```bash
+<img width="1578" height="96" alt="image" src="https://github.com/user-attachments/assets/c5e77937-ee30-4bb3-a455-bc212485a99a" />
 
-# Xóa nhiều tài sản cùng lúc bằng toán tử IN. 
-# (Vui lòng thay thế chuỗi ID bên dưới bằng các ID thực tế sinh ra từ Bài 2)
-curl -X DELETE "http://localhost:8080/assets/batch?ids=id-1,id-2,id-3"
-```
-**[Bài 4 & 5] Thuật toán Retry & Giám sát sức khỏe (Health Check)**
-```bash
+## [Bài 3] Xóa hàng loạt (Batch Delete)##
 
-# Kiểm tra trạng thái của Server và Database (Bài 5)
-curl -X GET http://localhost:8080/health
-Mẹo test Bài 4 (Retry): Bạn hãy thử tắt container db trong Docker đi, sau đó khởi chạy lại server bằng go run cmd/server/main.go. Bạn sẽ thấy log hệ thống kích hoạt Exponential Backoff, tự động lùi thời gian chờ và thử kết nối lại tối đa 5 lần thay vì sập (panic) ngay lập tức.
-```
-**[Bài 6] Phân trang danh sách (Pagination)**
-```bash
-# Lấy danh sách tài sản ở trang 1, mỗi trang lấy tối đa 5 bản ghi
-curl -X GET "http://localhost:8080/assets?page=1&limit=5"
-```
-**[Bài 7] Tìm kiếm gần đúng (Search)**
-```bash
-# Tìm kiếm "gần đúng" (ILIKE) không phân biệt hoa thường. 
-# Ví dụ: Tìm các tài sản có chứa chữ "firewall"
-curl -X GET "http://localhost:8080/assets/search?q=firewall"
-```
+
+Xóa nhiều tài sản cùng lúc bằng toán tử IN. 
+
+
+
+(Vui lòng thay thế chuỗi ID bên dưới bằng các ID thực tế sinh ra từ Bài 2)
+
+
+curl.exe -X DELETE "http://localhost:8080/assets/batch?ids=id-1,id-2,id-3"
+<img width="1069" height="56" alt="image" src="https://github.com/user-attachments/assets/d874ad13-2cc2-46b4-b765-3a69e54f903e" />
+
+## [Bài 4 & 5] Thuật toán Retry & Giám sát sức khỏe (Health Check)##
+
+Kiểm tra trạng thái của Server và Database (Bài 5)
+
+curl.exe -X GET http://localhost:8080/health
+<img width="799" height="81" alt="image" src="https://github.com/user-attachments/assets/783af0ba-404c-4da2-b732-c45142297ef2" />
+
+
+
+Test bài 4 (Retry): Bạn hãy thử tắt container db trong Docker đi, sau đó khởi chạy lại server bằng go run cmd/server/main.go. Bạn sẽ thấy log hệ thống kích hoạt Exponential Backoff, tự động lùi thời gian chờ và thử kết nối lại tối đa 5 lần thay vì sập (panic) ngay lập tức
+
+docker-compose stop db
+<img width="1529" height="103" alt="image" src="https://github.com/user-attachments/assets/e956bb7e-eb24-4a99-8a63-e6165282b939" />
+<img width="1255" height="239" alt="image" src="https://github.com/user-attachments/assets/9293e874-cdd8-48b5-9d19-d81723387dd4" />
+
+## [Bài 6] Phân trang danh sách (Pagination)
+
+Lấy danh sách tài sản ở trang 1, mỗi trang lấy tối đa 5 bản ghi
+
+
+curl.exe -X GET "http://localhost:8080/assets?page=1&limit=5"
+<img width="1600" height="130" alt="image" src="https://github.com/user-attachments/assets/acfc191b-572d-4ddd-be39-31c782561090" />
+
+## [Bài 7] Tìm kiếm gần đúng (Search)
+
+Tìm kiếm "gần đúng" (ILIKE) không phân biệt hoa thường. 
+
+
+Ví dụ: Tìm các tài sản có chứa chữ "firewall"
+
+
+
+curl.exe -X GET "http://localhost:8080/assets/search?q=firewall"
+
+<img width="1607" height="106" alt="image" src="https://github.com/user-attachments/assets/038183b5-74ec-494d-9214-3a329ba97322" />
+
+
+

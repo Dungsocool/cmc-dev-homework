@@ -10,29 +10,6 @@
 * **Kiến trúc:** Clean Architecture (Handler -> Service -> Storage)
 
 
-## 🛡️ Tiêu điểm Bảo mật: Ngăn chặn hoàn toàn SQL Injection (SQLi)
-
-Trong dự án này, rủi ro SQL Injection đã được triệt tiêu 100% tại tầng Storage bằng cách áp dụng triệt để kỹ thuật **Parameterized Queries** (Truy vấn tham số hóa) thông qua driver `database/sql` của Go.
-```text
- Nguyên lý hoạt động (Tại sao nó an toàn?)
-Thay vì sử dụng cách nối chuỗi (String Concatenation) nguy hiểm để tạo câu lệnh SQL, hệ thống tách bạch hoàn toàn giữa **"Cấu trúc lệnh" (Code)** và **"Dữ liệu" (Data)**. 
-
-Khi một truy vấn được gửi đi, quá trình diễn ra qua 2 bước bảo mật khép kín:
-* **Bước 1 (Prepare):** Database nhận cấu trúc câu lệnh SQL với các "chỗ trống" ảo (Placeholders như `$1, $2`). Nó tiến hành biên dịch (compile) cấu trúc lệnh này trước.
-* **Bước 2 (Execute):** Dữ liệu người dùng nhập vào mới được gửi xuống để "lấp" vào các chỗ trống đó. Lúc này, Database xử lý chúng hoàn toàn dưới dạng **Văn bản thuần túy (Literal Values)**, tuyệt đối không coi đó là một phần của câu lệnh thực thi.
-```
-#### Minh họa thực tế 
-📍 Bài 3 (Batch Delete)
-<img width="786" height="523" alt="image" src="https://github.com/user-attachments/assets/20bbf63d-7889-4736-99ff-152d3204a86b" />
-Sử dụng động Parameterized Queries với toán tử IN để bảo mật tính năng xóa hàng loạt, không cộng chuỗi ID trực tiếp.
-
-📍  Bài 7 (Search by Name)
-<img width="1074" height="337" alt="image" src="https://github.com/user-attachments/assets/cea5d9fd-febf-4d38-9c47-79840fde173a" />
-Sử dụng tham số $1 kết hợp toán tử ILIKE. Ký tự '%' được nối vào biến ở tầng Go, đảm bảo cấu trúc lệnh SQL không bị phá vỡ bởi input của người dùng.
-
-#### Kết luận: Nhờ cơ chế bọc tham số $1, $2 của PostgreSQL và thư viện Go, mọi ký tự đặc biệt như dấu nháy đơn ('), dấu chấm phẩy (;) hay các lệnh SQL lồng ghép từ Hacker đều bị vô hiệu hóa hoàn toàn trước khi chạm vào dữ liệu thực tế.
-
-
 ## ✅ Các tính năng đã hoàn thành
 Dự án đã hoàn thiện toàn bộ các yêu cầu cốt lõi và nâng cao:
 1. **Bài 1 - Statistics APIs:** Cung cấp API thống kê tổng tài sản và đếm số lượng tài sản theo các bộ lọc (loại, trạng thái).
@@ -201,8 +178,51 @@ curl.exe -X GET "http://localhost:8080/assets/search?q=firewall"
 
 <img width="1607" height="106" alt="image" src="https://github.com/user-attachments/assets/038183b5-74ec-494d-9214-3a329ba97322" />
 
+## 🛡️ Tiêu điểm Bảo mật: Ngăn chặn hoàn toàn SQL Injection (SQLi)
+
+Trong dự án này, rủi ro SQL Injection đã được triệt tiêu 100% tại tầng Storage bằng cách áp dụng triệt để kỹ thuật **Parameterized Queries** (Truy vấn tham số hóa) thông qua driver `database/sql` của Go.
+```text
+ Nguyên lý hoạt động (Tại sao nó an toàn?)
+Thay vì sử dụng cách nối chuỗi (String Concatenation) nguy hiểm để tạo câu lệnh SQL, hệ thống tách bạch hoàn toàn giữa **"Cấu trúc lệnh" (Code)** và **"Dữ liệu" (Data)**. 
+
+Khi một truy vấn được gửi đi, quá trình diễn ra qua 2 bước bảo mật khép kín:
+* **Bước 1 (Prepare):** Database nhận cấu trúc câu lệnh SQL với các "chỗ trống" ảo (Placeholders như `$1, $2`). Nó tiến hành biên dịch (compile) cấu trúc lệnh này trước.
+* **Bước 2 (Execute):** Dữ liệu người dùng nhập vào mới được gửi xuống để "lấp" vào các chỗ trống đó. Lúc này, Database xử lý chúng hoàn toàn dưới dạng **Văn bản thuần túy (Literal Values)**, tuyệt đối không coi đó là một phần của câu lệnh thực thi.
+```
+#### Minh họa thực tế 
+📍 Bài 3 (Batch Delete)
 
 
 
+<img width="786" height="523" alt="image" src="https://github.com/user-attachments/assets/20bbf63d-7889-4736-99ff-152d3204a86b" />
+
+
+Sử dụng động Parameterized Queries với toán tử IN để bảo mật tính năng xóa hàng loạt, không cộng chuỗi ID trực tiếp.
+
+📍  Bài 7 (Search by Name)
+<img width="1074" height="337" alt="image" src="https://github.com/user-attachments/assets/cea5d9fd-febf-4d38-9c47-79840fde173a" />
+
+Sử dụng tham số $1 kết hợp toán tử ILIKE. Ký tự '%' được nối vào biến ở tầng Go, đảm bảo cấu trúc lệnh SQL không bị phá vỡ bởi input của người dùng.
+
+#### Kết luận: Nhờ cơ chế bọc tham số $1, $2 của PostgreSQL và thư viện Go, mọi ký tự đặc biệt như dấu nháy đơn ('), dấu chấm phẩy (;) hay các lệnh SQL lồng ghép từ Hacker đều bị vô hiệu hóa hoàn toàn trước khi chạm vào dữ liệu thực tế.
+
+### 🛡️  Các cách phòng chống SQL Injection KHÁC (Có thể triển khai thêm)
+
+```text
+🛡️ Cách 1: Áp dụng Nguyên tắc đặc quyền tối thiểu (Principle of Least Privilege - PoLP)
+Triển khai: Thay vì để API Go kết nối vào Database bằng tài khoản siêu quản trị postgres (có quyền xóa toàn bộ DB), ta sẽ tạo một user riêng (ví dụ: api_user).
+
+Tác dụng: Cấp cho api_user này chỉ có quyền SELECT, INSERT, UPDATE, DELETE trên đúng bảng assets. Nếu hacker có tìm ra được một lỗ hổng SQLi đi chăng nữa và gửi lệnh DROP TABLE assets, PostgreSQL sẽ chặn lại ngay lập tức và báo lỗi: "Permission denied".
+
+🛡️ Cách 2: Sử dụng ORM hoặc Query Builder
+Triển khai: Trong các dự án Go thực tế lớn hơn, thay vì tự viết SQL thuần (database/sql) như hiện tại, người ta thường dùng các thư viện ORM (như GORM) hoặc Query Builder (như Squirrel).
+
+Tác dụng: Các thư viện này tự động hóa hoàn toàn việc "làm sạch" (sanitize) dữ liệu và bọc tham số. Bạn chỉ cần viết code dạng db.Where("name = ?", userInput), thư viện sẽ tự động lo phần chống SQL Injection bên dưới.
+
+🛡️ Cách 3: Lớp giáp hạ tầng - Tường lửa ứng dụng web (WAF)
+Triển khai: Triển khai một hệ thống WAF (như Cloudflare, AWS WAF, hoặc ModSecurity) đứng chắn phía trước API Server (Cổng 8080) của bạn.
+
+Tác dụng: WAF có các tập luật (ruleset) nhận diện các dấu hiệu độc hại. Nếu một request gửi lên có chứa các từ khóa nhạy cảm ghép cùng nhau như UNION SELECT, 1=1, hay DROP TABLE, WAF sẽ tự động khóa IP của hacker lại và trả về lỗi 403 Forbidden trước khi request đó kịp chạm tới code Go của bạn.
+```
 
 

@@ -9,15 +9,39 @@
 * **Hạ tầng:** Docker & Docker Compose
 * **Kiến trúc:** Clean Architecture (Handler -> Service -> Storage)
 
-## ✅ Các tính năng đã hoàn thành (7/7 Bài tập)
-Dự án đã hoàn thiện toàn bộ các yêu cầu cốt lõi và bài tập nâng cao:
+
+## 🛡️ Tiêu điểm Bảo mật: Ngăn chặn hoàn toàn SQL Injection (SQLi)
+
+Trong dự án này, rủi ro SQL Injection đã được triệt tiêu 100% tại tầng Storage bằng cách áp dụng triệt để kỹ thuật **Parameterized Queries** (Truy vấn tham số hóa) thông qua driver `database/sql` của Go.
+```text
+ Nguyên lý hoạt động (Tại sao nó an toàn?)
+Thay vì sử dụng cách nối chuỗi (String Concatenation) nguy hiểm để tạo câu lệnh SQL, hệ thống tách bạch hoàn toàn giữa **"Cấu trúc lệnh" (Code)** và **"Dữ liệu" (Data)**. 
+
+Khi một truy vấn được gửi đi, quá trình diễn ra qua 2 bước bảo mật khép kín:
+* **Bước 1 (Prepare):** Database nhận cấu trúc câu lệnh SQL với các "chỗ trống" ảo (Placeholders như `$1, $2`). Nó tiến hành biên dịch (compile) cấu trúc lệnh này trước.
+* **Bước 2 (Execute):** Dữ liệu người dùng nhập vào mới được gửi xuống để "lấp" vào các chỗ trống đó. Lúc này, Database xử lý chúng hoàn toàn dưới dạng **Văn bản thuần túy (Literal Values)**, tuyệt đối không coi đó là một phần của câu lệnh thực thi.
+```
+#### Minh họa thực tế 
+📍 Bài 3 (Batch Delete)
+<img width="786" height="523" alt="image" src="https://github.com/user-attachments/assets/20bbf63d-7889-4736-99ff-152d3204a86b" />
+Sử dụng động Parameterized Queries với toán tử IN để bảo mật tính năng xóa hàng loạt, không cộng chuỗi ID trực tiếp.
+
+📍  Bài 7 (Search by Name)
+<img width="1074" height="337" alt="image" src="https://github.com/user-attachments/assets/cea5d9fd-febf-4d38-9c47-79840fde173a" />
+Sử dụng tham số $1 kết hợp toán tử ILIKE. Ký tự '%' được nối vào biến ở tầng Go, đảm bảo cấu trúc lệnh SQL không bị phá vỡ bởi input của người dùng.
+
+#### Kết luận: Nhờ cơ chế bọc tham số $1, $2 của PostgreSQL và thư viện Go, mọi ký tự đặc biệt như dấu nháy đơn ('), dấu chấm phẩy (;) hay các lệnh SQL lồng ghép từ Hacker đều bị vô hiệu hóa hoàn toàn trước khi chạm vào dữ liệu thực tế.
+
+
+## ✅ Các tính năng đã hoàn thành
+Dự án đã hoàn thiện toàn bộ các yêu cầu cốt lõi và nâng cao:
 1. **Bài 1 - Statistics APIs:** Cung cấp API thống kê tổng tài sản và đếm số lượng tài sản theo các bộ lọc (loại, trạng thái).
 2. **Bài 2 - Batch Create:** Thêm mới hàng loạt tài sản (tối đa 100 items/request) an toàn tuyệt đối với cơ chế **Database Transaction** (All-or-nothing).
-3. **Bài 3 - Batch Delete:** Xóa hàng loạt tài sản thông minh dựa trên danh sách IDs.
-4. **Bài 4 - Connection Retry (⭐):** Xây dựng thuật toán **Exponential Backoff** giúp Server tự động thử lại kết nối (tối đa 5 lần) nếu Database bị sập hoặc khởi động chậm.
+3. **Bài 3 - Batch Delete:** Xóa hàng loạt tài sản thông minh dựa trên danh sách ids.
+4. **Bài 4 - Connection Retry:** Xây dựng thuật toán **Exponential Backoff** giúp Server tự động thử lại kết nối (tối đa 5 lần) nếu Database bị sập hoặc khởi động chậm.
 5. **Bài 5 - Health Check:** Cung cấp API giám sát tình trạng hệ thống, trả về trạng thái của Database và các thông số của Connection Pool.
-6. **Bài 6 - Pagination & Filtering (🌟 Bonus):** Xử lý phân trang và lọc dữ liệu động bằng SQL để tối ưu hóa hiệu năng truy vấn danh sách tài sản.
-7. **Bài 7 - Search by Name (🌟 Bonus):** Hỗ trợ tìm kiếm tài sản theo tên với cơ chế khớp một phần (Partial match / Case-insensitive).
+6. **Bài 6 - Pagination & Filtering:** Xử lý phân trang và lọc dữ liệu động bằng SQL để tối ưu hóa hiệu năng truy vấn danh sách tài sản.
+7. **Bài 7 - Search by Name:** Hỗ trợ tìm kiếm tài sản theo tên với cơ chế khớp một phần (Partial match / Case-insensitive).
 
 ## 📂 Cấu trúc thư mục (Project Structure)
 Dự án được chia thành các package nhỏ lẻ tuân theo Clean Architecture:
@@ -176,6 +200,7 @@ Ví dụ: Tìm các tài sản có chứa chữ "firewall"
 curl.exe -X GET "http://localhost:8080/assets/search?q=firewall"
 
 <img width="1607" height="106" alt="image" src="https://github.com/user-attachments/assets/038183b5-74ec-494d-9214-3a329ba97322" />
+
 
 
 

@@ -1,167 +1,156 @@
-﻿# 🚀 CMC Intern API Project - Asset Management
+# 🚀 CMC Intern API Project - Asset Management
 
-Đây là dự án xây dựng hệ thống RESTful API dùng để quản lý các tài sản IT (Domain, IP, Service), được phát triển bằng Go (Golang) và cơ sở dữ liệu PostgreSQL. Dự án tuân thủ nghiêm ngặt mô hình **Clean Architecture** để tối ưu hóa việc bảo trì và phân tách rõ ràng các nghiệp vụ.
-## 📑 Mục lục (Table of Contents)
-* [🛠️ Công nghệ & Thư viện sử dụng](#cong-nghe)
-* [🛡️ Tiêu điểm Bảo mật: Ngăn chặn hoàn toàn SQL Injection](#bao-mat)
-* [✅ Các tính năng đã hoàn thành](#tinh-nang)
-* [📂 Cấu trúc thư mục (Project Structure)](#cau-truc)
-* [📡 Danh sách API Endpoints](#api)
-* [💻 Hướng dẫn Cài đặt & Khởi chạy (How to Run)](#cai-dat)
-* [🧪 Hướng Dẫn Test Từng Bài (API Testing Guide)](#test)
-* [🛡️ Các cách phòng chống SQL Injection KHÁC](#phong-chong-khac)
+This is a project to build a RESTful API system for managing IT assets (Domain, IP, Service), developed using Go (Golang) and a PostgreSQL database. The project strictly adheres to the **Clean Architecture** pattern to optimize maintenance and ensure a clear separation of concerns.
+
+## 📑 Table of Contents
+* [🛠️ Technologies & Libraries Used](#technologies-and-libraries)
+* [🛡️ Security Spotlight: Complete Prevention of SQL Injection](#security-spotlight)
+* [✅ Completed Features](#completed-features)
+* [📂 Directory Structure (Project Structure)](#project-structure)
+* [📡 API Endpoints List](#api-endpoints)
+* [💻 Installation & Running Guide (How to Run)](#how-to-run)
+* [🧪 API Testing Guide (Testing Instructions)](#testing-guide)
+* [🛡️ OTHER Ways to Prevent SQL Injection](#other-prevention-methods)
 
 ---
-<a id="cong-nghe"></a>
-## 🛠️ Công nghệ & Thư viện sử dụng
-* **Ngôn ngữ:** Go (Golang)
-* **Cơ sở dữ liệu:** PostgreSQL
-* **Bộ định tuyến (Router):** `gorilla/mux` (Kết hợp thư viện chuẩn `net/http`)
-* **Hạ tầng:** Docker & Docker Compose
-* **Kiến trúc:** Clean Architecture (Handler -> Service -> Storage)
+<a id="technologies-and-libraries"></a>
+## 🛠️ Technologies & Libraries Used
+* **Language:** Go (Golang)
+* **Database:** PostgreSQL
+* **Router:** `gorilla/mux` (combined with native `net/http`)
+* **Infrastructure:** Docker & Docker Compose
+* **Architecture:** Clean Architecture (Handler -> Service -> Storage)
 
-<a id="bao-mat"></a>
-## 🛡️ Tiêu điểm Bảo mật: Ngăn chặn hoàn toàn SQL Injection (SQLi)
+<a id="security-spotlight"></a>
+## 🛡️ Security Spotlight: Complete Prevention of SQL Injection (SQLi)
 
-Trong dự án này, rủi ro SQL Injection đã được triệt tiêu 100% tại tầng Storage bằng cách áp dụng triệt để kỹ thuật **Parameterized Queries** (Truy vấn tham số hóa) thông qua driver `database/sql` của Go.
+In this project, the risk of SQL Injection has been 100% eliminated in the Storage layer by strictly applying the **Parameterized Queries** technique via Go's native `database/sql` driver.
 
-Nguyên lý hoạt động (Tại sao nó an toàn?)
-Thay vì sử dụng cách nối chuỗi (String Concatenation) nguy hiểm để tạo câu lệnh SQL, hệ thống tách bạch hoàn toàn giữa **"Cấu trúc lệnh" (Code)** và **"Dữ liệu" (Data)**. 
+### How it works (Why is it secure?)
+Instead of using dangerous String Concatenation to construct SQL statements, the system completely separates the **"Statement Structure" (Code)** from the **"User Inputs" (Data)**. 
 
-Khi một truy vấn được gửi đi, quá trình diễn ra qua 2 bước bảo mật khép kín:
+When a query is executed, the process goes through 2 secure steps:
 
+**Step 1 (Prepare)**: The database receives the SQL statement structure with virtual placeholders (like `$1, $2`). It compiles this command structure first.
 
-**Bước 1 (Prepare)** : Database nhận cấu trúc câu lệnh SQL với các "chỗ trống" ảo (Placeholders như `$1, $2`). Nó tiến hành biên dịch (compile) cấu trúc lệnh này trước.
+**Step 2 (Execute)**: The user data is then sent to fill these placeholders. At this point, the database treats the data purely as **literal values (plain text)**, never executing or interpreting it as SQL commands.
 
-
-**Bước 2 (Execute)**: Dữ liệu người dùng nhập vào mới được gửi xuống để "lấp" vào các chỗ trống đó. Lúc này, Database xử lý chúng hoàn toàn dưới dạng **Văn bản thuần túy (Literal Values)**, tuyệt đối không coi đó là một phần của câu lệnh thực thi.
-
-#### Minh họa thực tế 
-📍 Bài 3 (Batch Delete)
-
-
+### Real-world Illustrations
+📍 Part 3 (Batch Delete)
 
 <img width="786" height="523" alt="image" src="https://github.com/user-attachments/assets/20bbf63d-7889-4736-99ff-152d3204a86b" />
 
+Dynamically building Parameterized Queries using the IN operator to secure the batch delete feature, avoiding direct string concatenation of IDs.
 
-Sử dụng động Parameterized Queries với toán tử IN để bảo mật tính năng xóa hàng loạt, không cộng chuỗi ID trực tiếp.
-
-📍  Bài 7 (Search by Name)
+📍 Part 7 (Search by Name)
 <img width="1074" height="337" alt="image" src="https://github.com/user-attachments/assets/cea5d9fd-febf-4d38-9c47-79840fde173a" />
 
-Sử dụng tham số $1 kết hợp toán tử ILIKE. Ký tự '%' được nối vào biến ở tầng Go, đảm bảo cấu trúc lệnh SQL không bị phá vỡ bởi input của người dùng.
+Using the `$1` placeholder combined with the `ILIKE` operator. The `%` wildcard character is appended in Go code, ensuring the SQL structure remains intact regardless of user input.
 
-#### Kết luận: Nhờ cơ chế bọc tham số $1, $2 của PostgreSQL và thư viện Go, mọi ký tự đặc biệt như dấu nháy đơn ('), dấu chấm phẩy (;) hay các lệnh SQL lồng ghép từ Hacker đều bị vô hiệu hóa hoàn toàn trước khi chạm vào dữ liệu thực tế.
+#### Conclusion: Thanks to the placeholder parameterization mechanism of PostgreSQL and Go's database driver, all special characters like single quotes ('), semicolons (;), or malicious nested SQL queries injected by hackers are completely neutralized before ever interacting with the database.
 
-<a id="tinh-nang"></a>
-## ✅ Các tính năng đã hoàn thành
-Dự án đã hoàn thiện toàn bộ các yêu cầu cốt lõi và nâng cao:
-1. **Bài 1 - Statistics APIs:** Cung cấp API thống kê tổng tài sản và đếm số lượng tài sản theo các bộ lọc (loại, trạng thái).
-2. **Bài 2 - Batch Create:** Thêm mới hàng loạt tài sản (tối đa 100 items/request) an toàn tuyệt đối với cơ chế **Database Transaction** (All-or-nothing).
-3. **Bài 3 - Batch Delete:** Xóa hàng loạt tài sản thông minh dựa trên danh sách ids.
-4. **Bài 4 - Connection Retry:** Xây dựng thuật toán **Exponential Backoff** giúp Server tự động thử lại kết nối (tối đa 5 lần) nếu Database bị sập hoặc khởi động chậm.
-5. **Bài 5 - Health Check:** Cung cấp API giám sát tình trạng hệ thống, trả về trạng thái của Database và các thông số của Connection Pool.
-6. **Bài 6 - Pagination & Filtering:** Xử lý phân trang và lọc dữ liệu động bằng SQL để tối ưu hóa hiệu năng truy vấn danh sách tài sản.
-7. **Bài 7 - Search by Name:** Hỗ trợ tìm kiếm tài sản theo tên với cơ chế khớp một phần (Partial match / Case-insensitive).
-<a id="cau-truc"></a>
-## 📂 Cấu trúc thư mục (Project Structure)
-Dự án được chia thành các package nhỏ lẻ tuân theo Clean Architecture:
+<a id="completed-features"></a>
+## ✅ Completed Features
+The project has successfully implemented all core and advanced requirements:
+1. **Part 1 - Statistics APIs:** Provides APIs to get overall asset statistics and count assets with dynamic filters (type, status).
+2. **Part 2 - Batch Create:** Safely create multiple assets (up to 100 items/request) using a **Database Transaction** (All-or-nothing).
+3. **Part 3 - Batch Delete:** Efficiently delete multiple assets simultaneously using a list of IDs.
+4. **Part 4 - Connection Retry:** Implements an **Exponential Backoff** retry algorithm to automatically reconnect (up to 5 times) if the database drops or starts slowly.
+5. **Part 5 - Health Check:** Provides a system monitoring endpoint that returns database connectivity health and Connection Pool statistics.
+6. **Part 6 - Pagination & Filtering:** Implements server-side pagination and dynamic filtering in SQL to optimize response performance for large asset lists.
+7. **Part 7 - Search by Name:** Supports partial and case-insensitive name searches.
+
+<a id="project-structure"></a>
+## 📂 Directory Structure (Project Structure)
+The project is structured into packages following Clean Architecture principles:
 
 ```text
 ├── cmd/
 │   └── server/
-│       └── main.go                 # Entry point: Điểm khởi chạy server
+│       └── main.go                 # Entry point: Server startup point
 ├── homeworks/
 │   └── submissions/
-│       ├── SUBMISSION.md           # File checklist nộp bài
-│       └── (Các file ảnh minh chứng)
+│       ├── SUBMISSION.md           # Assignment submission checklist file
+│       └── (Supporting screenshots/evidence)
 ├── internal/
-│   ├── handler/                    # Tầng giao tiếp HTTP
-│   │   └── asset_handler.go        # Xử lý Request/Response cho Assets
-│   ├── model/                      # Định nghĩa các cấu trúc dữ liệu
+│   ├── handler/                    # HTTP Presentation Layer
+│   │   └── asset_handler.go        # Handles HTTP Request/Response for Assets
+│   ├── model/                      # Domain Model Layer / Struct definitions
 │   │   ├── bonus.go
 │   │   └── stats.go
-│   ├── service/                    # Tầng xử lý Logic nghiệp vụ
+│   ├── service/                    # Business Logic Layer
 │   │   └── asset_service.go
-│   └── storage/                    # Tầng giao tiếp Cơ sở dữ liệu
-│       ├── storage.go              # Interface của Storage
-│       └── postgres/               # Triển khai cụ thể với PostgreSQL
-│           ├── asset_storage.go    # Query CRUD cơ bản
-│           ├── bonus_storage.go    # Query cho tính năng phân trang, tìm kiếm
-│           ├── delete_storage.go   # Query cho tính năng xóa hàng loạt
-│           ├── postgres.go         # Cấu hình kết nối và Retry DB
-│           └── stats_storage.go    # Query cho tính năng thống kê
-├── docker-compose.yml              # File khởi tạo database PostgreSQL
+│   └── storage/                    # Database Infrastructure Layer
+│       ├── storage.go              # Storage Interface
+│       └── postgres/               # PostgreSQL Specific Implementation
+│           ├── asset_storage.go    # Basic CRUD Queries
+│           ├── bonus_storage.go    # Queries for Pagination and Sorting/Searching
+│           ├── delete_storage.go   # Queries for Batch Delete
+│           ├── postgres.go         # Database Connection setup and Retry mechanism
+│           └── stats_storage.go    # Queries for Statistics
+├── docker-compose.yml              # PostgreSQL Database initialization file
 └── README.md
-
 ```
 
-<a id="api"></a>
-## 📡 Danh sách API Endpoints
+<a id="api-endpoints"></a>
+## 📡 API Endpoints List
 
-| Method | Endpoint | Tính năng |
+| Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/health` | Kiểm tra trạng thái của Server và Database |
-| `GET` | `/assets/stats` | Thống kê số lượng tài sản theo loại và trạng thái |
-| `GET` | `/assets/count` | Đếm tài sản (hỗ trợ Query: `?type=...&status=...`) |
-| `POST` | `/assets/batch` | Tạo mới nhiều tài sản cùng lúc |
-| `DELETE` | `/assets/batch` | Xóa nhiều tài sản (Query: `?ids=id1,id2...`) |
-| `GET` | `/assets` | Lấy danh sách tài sản (Query: `?page=1&limit=20`) |
+| `GET` | `/health` | Check server and database connectivity status |
+| `GET` | `/assets/stats` | Get asset statistics grouped by type and status |
+| `GET` | `/assets/count` | Count assets (supports query: `?type=...&status=...`) |
+| `POST` | `/assets/batch` | Create multiple assets at once |
+| `DELETE` | `/assets/batch` | Delete multiple assets (Query: `?ids=id1,id2...`) |
+| `GET` | `/assets` | Get asset list with pagination (Query: `?page=1&limit=20`) |
+| `GET` | `/assets/search` | Search assets by name (Query: `?q=keyword`) |
 
-| `GET` | `/assets/search` | Tìm kiếm tài sản theo tên (Query: `?q=keyword`) |
-<a id="cai-dat"></a>
-## 💻 Hướng dẫn Cài đặt & Khởi chạy (How to Run)
-1. Khởi chạy Database:
-Đảm bảo máy bạn đã cài Docker. Mở terminal và chạy lệnh sau để dựng database:
+<a id="how-to-run"></a>
+## 💻 Installation & Running Guide (How to Run)
+1. **Start the Database:**
+Make sure you have Docker installed. Open a terminal and run the following command to spin up the database:
 
-
-
-
-
+```bash
 docker-compose up -d
+```
 
+2. **Start the API Server:**
+Run the following command to start the Go application:
 
-
-2. Khởi chạy API Server:
-
-
-
-
-Tiếp tục chạy lệnh sau để khởi động ứng dụng Go:
-
+```bash
 go run cmd/server/main.go
+```
 
+*Note: Thanks to the Connection Retry mechanism (Part 4), the API Server will automatically wait and attempt reconnection if PostgreSQL is still starting up.*
 
+The server will listen to requests at: `http://localhost:8080`
 
+<a id="testing-guide"></a>
+## 🧪 API Testing Guide (Testing Instructions)
 
-Ghi chú: Nhờ tính năng Connection Retry (Bài 4), Server sẽ tự động chờ và kết nối lại nếu PostgreSQL đang trong quá trình khởi động.
+*(Note: Ensure the server is running at `http://localhost:8080` before running any commands. If you are using Windows PowerShell, type `curl.exe` instead of `curl`, or use Git Bash).*
 
-Server sẽ lắng nghe các request tại địa chỉ: http://localhost:8080
+### [Part 1] Statistics & Count
 
-<a id="test"></a>
-## 🧪 Hướng Dẫn Test Từng Bài (API Testing Guide)
+1. Get the overview statistics report (Total count grouped by Type and Status):
 
-*(Lưu ý: Đảm bảo Server đang chạy ở `http://localhost:8080` trước khi chạy lệnh. Nếu bạn dùng Windows PowerShell, hãy gõ `curl.exe` thay cho `curl` hoặc sử dụng Git Bash).*
-
-### [Bài 1] Thống kê & Đếm tài sản (Statistics & Count )
-
-1. Lấy báo cáo tổng quan (Đếm tổng, nhóm theo Type và Status)
-
+```bash
 curl.exe -X GET http://localhost:8080/assets/stats
+```
 <img width="697" height="67" alt="image" src="https://github.com/user-attachments/assets/50f12b73-ebc5-4092-9122-a6e68b4cf119" />
 
-2. Đếm tài sản kết hợp bộ lọc động (Ví dụ: Đếm số IP đang active)
+2. Count assets with a dynamic filter combination (Example: Count active IP assets):
 
-
-
+```bash
 curl.exe -X GET "http://localhost:8080/assets/count?type=ip&status=active"
+```
 <img width="894" height="71" alt="image" src="https://github.com/user-attachments/assets/0bbee3b1-f2a5-4b55-b928-2b613bd3ae07" />
 
+### [Part 2] Batch Create
 
-### [Bài 2] Thêm hàng loạt tài sản (Batch Create)
+Uses a Database Transaction to ensure data integrity (Maximum of 100 assets per request).
 
-Sử dụng Transaction để đảm bảo tính toàn vẹn dữ liệu (Tối đa 100 tài sản/lần).
-
+```bash
 curl.exe -X POST http://localhost:8080/assets/batch \
 -H "Content-Type: application/json" \
 -d '{
@@ -171,82 +160,73 @@ curl.exe -X POST http://localhost:8080/assets/batch \
     {"name": "DB-Server-01", "type": "service"}
   ]
 }'
-
-
-
+```
 <img width="1578" height="96" alt="image" src="https://github.com/user-attachments/assets/c5e77937-ee30-4bb3-a455-bc212485a99a" />
 
-### [Bài 3] Xóa hàng loạt (Batch Delete)
+### [Part 3] Batch Delete
 
-Xóa nhiều tài sản cùng lúc bằng toán tử IN. 
+Delete multiple assets simultaneously using the `IN` operator.
 
+*(Please replace the ID string below with actual IDs generated from Part 2)*
 
-
-(Vui lòng thay thế chuỗi ID bên dưới bằng các ID thực tế sinh ra từ Bài 2)
-
-
+```bash
 curl.exe -X DELETE "http://localhost:8080/assets/batch?ids=id-1,id-2,id-3"
+```
 <img width="1069" height="56" alt="image" src="https://github.com/user-attachments/assets/d874ad13-2cc2-46b4-b765-3a69e54f903e" />
 
-### [Bài 4 & 5] Thuật toán Retry & Giám sát sức khỏe (Health Check)
+### [Parts 4 & 5] Connection Retry & Health Check
 
-Kiểm tra trạng thái của Server và Database (Bài 5)
+Check connectivity health of the API Server and PostgreSQL Database (Part 5):
 
+```bash
 curl.exe -X GET http://localhost:8080/health
+```
 <img width="799" height="81" alt="image" src="https://github.com/user-attachments/assets/783af0ba-404c-4da2-b732-c45142297ef2" />
 
+Testing Part 4 (Retry): Try stopping the db container in Docker, then start the server using `go run cmd/server/main.go`. You will see system logs trigger Exponential Backoff, automatically increasing wait times and trying to reconnect up to 5 times instead of causing a panic.
 
-
-Test bài 4 (Retry): Bạn hãy thử tắt container db trong Docker đi, sau đó khởi chạy lại server bằng go run cmd/server/main.go. Bạn sẽ thấy log hệ thống kích hoạt Exponential Backoff, tự động lùi thời gian chờ và thử kết nối lại tối đa 5 lần thay vì sập (panic) ngay lập tức
-
+```bash
 docker-compose stop db
+```
 <img width="1529" height="103" alt="image" src="https://github.com/user-attachments/assets/e956bb7e-eb24-4a99-8a63-e6165282b939" />
 <img width="1255" height="239" alt="image" src="https://github.com/user-attachments/assets/9293e874-cdd8-48b5-9d19-d81723387dd4" />
 
-### [Bài 6] Phân trang danh sách (Pagination)
+### [Part 6] Pagination
 
-Lấy danh sách tài sản ở trang 1, mỗi trang lấy tối đa 5 bản ghi
+Get the list of assets on page 1, limiting to a maximum of 5 records per page:
 
-
+```bash
 curl.exe -X GET "http://localhost:8080/assets?page=1&limit=5"
+```
 <img width="1600" height="130" alt="image" src="https://github.com/user-attachments/assets/acfc191b-572d-4ddd-be39-31c782561090" />
 
-### [Bài 7] Tìm kiếm gần đúng (Search)
+### [Part 7] Search by Name
 
-Tìm kiếm "gần đúng" (ILIKE) không phân biệt hoa thường. 
+Performs a case-insensitive partial match search (using `ILIKE`).
 
+Example: Find assets containing the term "firewall":
 
-Ví dụ: Tìm các tài sản có chứa chữ "firewall"
-
-
-
+```bash
 curl.exe -X GET "http://localhost:8080/assets/search?q=firewall"
-
+```
 <img width="1607" height="106" alt="image" src="https://github.com/user-attachments/assets/038183b5-74ec-494d-9214-3a329ba97322" />
 
-<a id="phong-chong-khac"></a>
-### 🛡️  Các cách phòng chống SQL Injection KHÁC (Có thể triển khai thêm)
+<a id="other-prevention-methods"></a>
+### 🛡️ OTHER Ways to Prevent SQL Injection (For Future Implementation)
 
 ```text
-🛡️ Cách 1: Áp dụng Nguyên tắc đặc quyền tối thiểu (Principle of Least Privilege - PoLP)
-Triển khai: Thay vì để API Go kết nối vào Database bằng tài khoản siêu quản trị postgres (có quyền xóa toàn bộ DB), ta sẽ tạo một user riêng (ví dụ: api_user).
+🛡️ Method 1: Apply the Principle of Least Privilege (PoLP)
+Implementation: Instead of letting the Go API connect to the Database using the superuser postgres account (which has full DB dropping privileges), create a dedicated user (e.g., api_user).
 
-Tác dụng: Cấp cho api_user này chỉ có quyền SELECT, INSERT, UPDATE, DELETE trên đúng bảng assets. Nếu hacker có tìm ra được một lỗ hổng SQLi đi chăng nữa và gửi lệnh DROP TABLE assets, PostgreSQL sẽ chặn lại ngay lập tức và báo lỗi: "Permission denied".
+Effect: Grant api_user only SELECT, INSERT, UPDATE, and DELETE privileges specifically on the assets table. Even if an attacker finds a SQLi vulnerability and executes a DROP TABLE assets command, PostgreSQL will immediately block it and raise a "Permission denied" error.
 
-🛡️ Cách 2: Sử dụng ORM hoặc Query Builder
-Triển khai: Trong các dự án Go thực tế lớn hơn, thay vì tự viết SQL thuần (database/sql) như hiện tại, người ta thường dùng các thư viện ORM (như GORM) hoặc Query Builder (như Squirrel).
+🛡️ Method 2: Use an ORM or Query Builder
+Implementation: In larger real-world Go projects, instead of writing raw SQL (database/sql) manually, developers typically use ORM libraries (like GORM) or Query Builders (like Squirrel).
 
-Tác dụng: Các thư viện này tự động hóa hoàn toàn việc "làm sạch" (sanitize) dữ liệu và bọc tham số. Bạn chỉ cần viết code dạng db.Where("name = ?", userInput), thư viện sẽ tự động lo phần chống SQL Injection bên dưới.
+Effect: These libraries automatically sanitize inputs and perform parameter wrapping. You only need to write code like db.Where("name = ?", userInput), and the library takes care of SQL Injection prevention internally.
 
-🛡️ Cách 3: Lớp giáp hạ tầng - Tường lửa ứng dụng web (WAF)
-Triển khai: Triển khai một hệ thống WAF (như Cloudflare, AWS WAF, hoặc ModSecurity) đứng chắn phía trước API Server (Cổng 8080) của bạn.
+🛡️ Method 3: Infrastructure Layer Protection - Web Application Firewall (WAF)
+Implementation: Deploy a WAF system (such as Cloudflare, AWS WAF, or ModSecurity) directly in front of your API Server (Port 8080).
 
-Tác dụng: WAF có các tập luật (ruleset) nhận diện các dấu hiệu độc hại. Nếu một request gửi lên có chứa các từ khóa nhạy cảm ghép cùng nhau như UNION SELECT, 1=1, hay DROP TABLE, WAF sẽ tự động khóa IP của hacker lại và trả về lỗi 403 Forbidden trước khi request đó kịp chạm tới code Go của bạn.
+Effect: WAF uses pre-configured rulesets to detect malicious patterns. If a request contains sensitive keywords combined together such as UNION SELECT, 1=1, or DROP TABLE, the WAF automatically blocks the hacker's IP and returns a 403 Forbidden error before the request even reaches your Go server.
 ```
-
-
-
-
-
-
-
